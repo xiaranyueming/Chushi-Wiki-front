@@ -7,3 +7,13 @@ export const getBooksListApi = () => {
         method: "get",
     });
 }
+
+
+// 保存书籍
+export const saveBooksApi = (data) => {
+    return Request({
+        url: "/books/save",
+        method: "post",
+        data,
+    });
+}
