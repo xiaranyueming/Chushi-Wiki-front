@@ -17,3 +17,25 @@ export const saveBooksApi = (data) => {
         data,
     });
 }
+
+
+// 删除书籍
+export const deleteBooksApi = (id) => {
+    return Request({
+        url: `/books/delete/${id}`,
+        method: "delete",
+    });
+}
+
+
+// 搜索书籍
+export const searchBooksApi = (keyWord) => {
+    return Request({
+        url: "/books/search",
+        method: "get",
+        params: {
+            keyWord
+        }
+    });
+}
+
