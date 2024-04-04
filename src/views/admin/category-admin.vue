@@ -3,7 +3,7 @@ import {onMounted, ref} from 'vue';
 import {deleteCategoryApi, getCategoryListApi, saveCategoryApi, searchCategoryApi} from "@/apis/category.js";
 import dayjs from "dayjs";
 import {notification} from 'ant-design-vue';
-import {copy} from "@/utils/Tool.js";
+import {copy, toTree} from "@/utils/Tool.js";
 
 const loading = ref(false);
 
@@ -46,16 +46,8 @@ const getCategoryList = async () => {
         loading.value = false;
         return;
     }
-    data.value = res.data;
+    data.value = toTree(res.data, 0);
     loading.value = false;
-};
-
-// 分页
-const pagination = {
-    onChange: (page) => {
-        console.log(page);
-    },
-    pageSize: 6,
 };
 
 
@@ -146,7 +138,7 @@ onMounted(() => {
     
     
     <a-table :columns="columns" :data-source="data"
-             :loading="loading" :pagination="pagination"
+             :loading="loading" :pagination="false"
     >
         <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'createTime'">
@@ -194,9 +186,18 @@ onMounted(() => {
             <a-form-item
                 label="父分类"
                 name="parentId"
-                :rules="[{ required: true, message: '请输入父分类!' }]"
+                :rules="[{ required: true, message: '请选择父分类!' }]"
             >
-                <a-input v-model:value.number="form.parentId" />
+                <a-select ref="select"
+                          v-model:value="form.parentId"
+                >
+                    <a-select-option value="0">无</a-select-option>
+                    <a-select-option v-for="item in data" :key="item.id"
+                                     :value="item.id" :disabled="form.id === item.id"
+                    >
+                        {{ item.categoryName }}
+                    </a-select-option>
+                </a-select>
             </a-form-item>
             
             <a-form-item
