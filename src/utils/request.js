@@ -1,7 +1,10 @@
 import axios from "axios";
 
+const baseUrl = import.meta.env.VITE_BASE_URL
+
+// 创建axios实例
 const request = axios.create({
-    baseURL: 'http://localhost:8080',
+    baseURL: baseUrl,
     timeout: 3000
 })
 
