@@ -1,6 +1,6 @@
 <script setup>
 import {onMounted, ref} from 'vue';
-import {deleteBooksApi, getBooksListApi, saveBooksApi, searchBooksApi} from "@/apis/books.js";
+import {deleteCategoryApi, getCategoryListApi, saveCategoryApi, searchCategoryApi} from "@/apis/category.js";
 import dayjs from "dayjs";
 import {notification} from 'ant-design-vue';
 import {copy} from "@/utils/Tool.js";
@@ -10,39 +10,18 @@ const loading = ref(false);
 // 表格列
 const columns = [
     {
-        title: '封面',
-        dataIndex: 'cover',
-        key: 'cover',
+        title: '分类名称',
+        dataIndex: 'categoryName',
         align: 'center',
     },
     {
-        title: '书名',
-        dataIndex: 'bookName',
+        title: '父分类',
+        dataIndex: 'parentId',
         align: 'center',
     },
     {
-        title: '分类一',
-        dataIndex: 'category1Id',
-        align: 'center',
-    },
-    {
-        title: '分类二',
-        dataIndex: 'category2Id',
-        align: 'center',
-    },
-    {
-        title: '文档数',
-        dataIndex: 'docCount',
-        align: 'center',
-    },
-    {
-        title: '浏览量',
-        dataIndex: 'viewCount',
-        align: 'center',
-    },
-    {
-        title: '点赞数',
-        dataIndex: 'voteCount',
+        title: '排序',
+        dataIndex: 'sort',
         align: 'center',
     },
     {
@@ -60,9 +39,9 @@ const columns = [
 ];
 // 获取数据
 const data = ref([]);
-const getBooksList = async () => {
+const getCategoryList = async () => {
     loading.value = true;
-    const res = await getBooksListApi();
+    const res = await getCategoryListApi();
     if (res.code !== 200) {
         loading.value = false;
         return;
@@ -91,7 +70,7 @@ const edit = (record) => {
 // 确认
 const handleOk = async () => {
     confirmLoading.value = true;
-    const res = await saveBooksApi(form.value);
+    const res = await saveCategoryApi(form.value);
     if (res.code === 200) {
         notification.success({
             message: '成功',
@@ -99,7 +78,7 @@ const handleOk = async () => {
         });
         confirmLoading.value = false;
         open.value = false;
-        await getBooksList()
+        await getCategoryList()
     } else {
         notification.error({
             message: '失败',
@@ -120,13 +99,13 @@ const add = () => {
 
 // 删除
 const del = async (id) => {
-    const res = await deleteBooksApi(id);
+    const res = await deleteCategoryApi(id);
     if (res.code === 200) {
         notification.success({
             message: '成功',
             description: '删除成功'
         });
-        await getBooksList()
+        await getCategoryList()
     } else {
         notification.error({
             message: '失败',
@@ -139,7 +118,7 @@ const del = async (id) => {
 // 搜索
 const keyWord = ref('');
 const search = async () => {
-    const res = await searchBooksApi(keyWord.value);
+    const res = await searchCategoryApi(keyWord.value);
     if (res.code === 200) {
         data.value = res.data;
     } else {
@@ -152,14 +131,14 @@ const search = async () => {
 
 
 onMounted(() => {
-    getBooksList();
+    getCategoryList();
 });
 </script>
 
 <template>
     <div class="hd">
         <div class="search">
-            <a-input v-model:value="keyWord" allow-clear placeholder="请输入书名" style="width: 200px" />
+            <a-input v-model:value="keyWord" allow-clear placeholder="请输入分类名" style="width: 200px" />
             <a-button class="search-btn" type="primary" ghost @click="search">查询</a-button>
         </div>
         <a-button class="btn" type="primary" ghost @click="add">新增</a-button>
@@ -170,10 +149,7 @@ onMounted(() => {
              :loading="loading" :pagination="pagination"
     >
         <template #bodyCell="{ column, record }">
-            <template v-if="column.key === 'cover'">
-                <img class="img" :src="record.cover"  alt="avatar" />
-            </template>
-            <template v-else-if="column.key === 'createTime'">
+            <template v-if="column.key === 'createTime'">
                 {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
             </template>
             <template v-else-if="column.key === 'action'">
@@ -194,7 +170,7 @@ onMounted(() => {
         </template>
     </a-table>
     
-    <a-modal v-model:open="open" title="编辑书单" centered
+    <a-modal v-model:open="open" title="编辑分类" centered
              :body-style="{'margin-left': '-90px'}"
              :confirm-loading="confirmLoading"
              cancel-text="取消" ok-text="确定"
@@ -208,42 +184,26 @@ onMounted(() => {
             autocomplete="off"
         >
             <a-form-item
-                label="书名"
-                name="bookName"
-                :rules="[{ required: true, message: '请输入书名!' }]"
+                label="分类名"
+                name="categoryName"
+                :rules="[{ required: true, message: '请输入分类名!' }]"
             >
-                <a-input v-model:value="form.bookName" />
+                <a-input v-model:value="form.categoryName" />
             </a-form-item>
             
             <a-form-item
-                label="封面"
-                name="cover"
-                :rules="[{ required: true, message: '请输入封面地址!' }]"
+                label="父分类"
+                name="parentId"
+                :rules="[{ required: true, message: '请输入父分类!' }]"
             >
-                <a-input v-model:value="form.cover" />
+                <a-input v-model:value.number="form.parentId" />
             </a-form-item>
             
             <a-form-item
-                label="分类一"
-                name="category1Id"
-                :rules="[{ required: true, message: '请输入分类一!' }]"
+                label="排序"
+                name="sort"
             >
-                <a-input v-model:value.number="form.category1Id" />
-            </a-form-item>
-            
-            <a-form-item
-                label="分类二"
-                name="category2Id"
-                :rules="[{ required: true, message: '请输入分类二!' }]"
-            >
-                <a-input v-model:value.number="form.category2Id" />
-            </a-form-item>
-            
-            <a-form-item
-                label="描述"
-                name="description"
-            >
-                <a-textarea :auto-size="{ minRows: 2, maxRows: 5 }" v-model:value="form.description" />
+                <a-input v-model:value="form.sort" />
             </a-form-item>
         </a-form>
     </a-modal>

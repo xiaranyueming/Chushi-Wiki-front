@@ -15,8 +15,11 @@ import {RouterView} from 'vue-router'
                 <a-menu-item key="index">
                     <RouterLink to="/">首页</RouterLink>
                 </a-menu-item>
-                <a-menu-item key="admin">
-                    <RouterLink to="/admin/book">管理</RouterLink>
+                <a-menu-item key="books">
+                    <RouterLink to="/admin/book">书籍管理</RouterLink>
+                </a-menu-item>
+                <a-menu-item key="category">
+                    <RouterLink to="/admin/category">分类管理</RouterLink>
                 </a-menu-item>
                 <a-menu-item key="about">
                     <RouterLink to="/about">关于我们</RouterLink>
