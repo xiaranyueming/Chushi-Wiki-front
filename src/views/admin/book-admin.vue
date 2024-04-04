@@ -3,7 +3,8 @@ import {onMounted, ref} from 'vue';
 import {deleteBooksApi, getBooksListApi, saveBooksApi, searchBooksApi} from "@/apis/books.js";
 import dayjs from "dayjs";
 import {notification} from 'ant-design-vue';
-import {copy} from "@/utils/Tool.js";
+import {copy, toTree} from "@/utils/Tool.js";
+import {getCategoryListApi} from "@/apis/category.js";
 
 const loading = ref(false);
 
@@ -21,14 +22,10 @@ const columns = [
         align: 'center',
     },
     {
-        title: '分类一',
-        dataIndex: 'category1Id',
+        title: '分类',
+        dataIndex: 'category',
         align: 'center',
-    },
-    {
-        title: '分类二',
-        dataIndex: 'category2Id',
-        align: 'center',
+        key: 'category',
     },
     {
         title: '文档数',
@@ -70,6 +67,16 @@ const getBooksList = async () => {
     data.value = res.data;
     loading.value = false;
 };
+const getCategoryName = (id) => {
+    let name = '';
+    categorys.value.forEach(item => {
+        if (item.id === id) {
+            name = item.categoryName;
+        }
+    });
+    return name;
+};
+
 
 // 分页
 const pagination = {
@@ -84,13 +91,27 @@ const pagination = {
 const open = ref(false);
 const confirmLoading = ref(false);
 const form = ref({})
+const categoryIds = ref([]);
+// 获取分类数据
+let categorys = ref([]);
+const categoryList = ref([]);
+const getCategoryList = async () => {
+    const res = await getCategoryListApi();
+    if (res.code === 200) {
+        categorys.value = res.data;
+        categoryList.value = toTree(res.data, 0);
+    }
+};
 const edit = (record) => {
     open.value = true;
     form.value = copy(record);
+    categoryIds.value = [form.value.category1Id, form.value.category2Id];
 };
 // 确认
 const handleOk = async () => {
     confirmLoading.value = true;
+    form.value.category1Id = categoryIds.value[0];
+    form.value.category2Id = categoryIds.value[1];
     const res = await saveBooksApi(form.value);
     if (res.code === 200) {
         notification.success({
@@ -153,6 +174,7 @@ const search = async () => {
 
 onMounted(() => {
     getBooksList();
+    getCategoryList()
 });
 </script>
 
@@ -172,6 +194,9 @@ onMounted(() => {
         <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'cover'">
                 <img class="img" :src="record.cover"  alt="avatar" />
+            </template>
+            <template v-else-if="column.key === 'category'">
+                {{ getCategoryName(record.category1Id) }}/{{ getCategoryName(record.category2Id) }}
             </template>
             <template v-else-if="column.key === 'createTime'">
                 {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
@@ -224,19 +249,13 @@ onMounted(() => {
             </a-form-item>
             
             <a-form-item
-                label="分类一"
-                name="category1Id"
-                :rules="[{ required: true, message: '请输入分类一!' }]"
+                label="分类"
             >
-                <a-input v-model:value.number="form.category1Id" />
-            </a-form-item>
-            
-            <a-form-item
-                label="分类二"
-                name="category2Id"
-                :rules="[{ required: true, message: '请输入分类二!' }]"
-            >
-                <a-input v-model:value.number="form.category2Id" />
+                <a-cascader v-model:value="categoryIds"
+                            :options="categoryList"
+                            :field-names="{ label: 'categoryName', value: 'id', children: 'children' }"
+                            placeholder="请选择分类"
+                />
             </a-form-item>
             
             <a-form-item
