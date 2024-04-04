@@ -1,14 +1,19 @@
 <script setup>
 import {LikeOutlined, MessageOutlined, StarOutlined} from '@ant-design/icons-vue';
-import {onMounted, ref} from "vue";
-import {getBooksListApi} from "@/apis/books.js";
+import {onMounted, ref, watch} from "vue";
+import {getBooksByCategoryApi} from "@/apis/books.js";
+import {useRoute} from "vue-router";
 
+
+const route = useRoute();
 
 // 获取书籍列表
 const listData = ref([]);
-const getBooksList = async () => {
-    const res = await getBooksListApi();
-    listData.value = res.data;
+const getBooksByCategory = async () => {
+    const res = await getBooksByCategoryApi(route.params.id);
+    if (res.code === 200) {
+        listData.value = res.data;
+    }
 };
 
 const pagination = {
@@ -23,9 +28,12 @@ const actions = [
     { icon: MessageOutlined, text: '2' },
 ];
 
+watch(() => route.params.id, () => {
+    getBooksByCategory();
+});
 
 onMounted(() => {
-    getBooksList();
+    getBooksByCategory();
 });
 </script>
 
@@ -43,7 +51,7 @@ onMounted(() => {
                 </template>
                 <a-list-item-meta :description="item.description">
                     <template #title>
-                        <a :href="item.href">{{ item.bookName }}</a>
+                        <span>{{ item.bookName }}</span>
                     </template>
                     <template #avatar><a-avatar :src="item.cover" /></template>
                 </a-list-item-meta>

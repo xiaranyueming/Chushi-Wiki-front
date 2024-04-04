@@ -7,7 +7,6 @@ import {RouterView} from 'vue-router'
         <a-layout-header class="header">
             <div class="logo" />
             <a-menu
-                v-model:selectedKeys="selectedKeys1"
                 theme="dark"
                 mode="horizontal"
                 :style="{ lineHeight: '64px' }"

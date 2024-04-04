@@ -39,3 +39,13 @@ export const searchBooksApi = (keyWord) => {
     });
 }
 
+
+
+// 根据分类获取书籍
+export const getBooksByCategoryApi = (id) => {
+    return Request({
+        url: `/books/category/${id}`,
+        method: "get",
+    });
+}
+
