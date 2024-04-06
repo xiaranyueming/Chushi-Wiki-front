@@ -5,6 +5,7 @@ import {notification} from 'ant-design-vue';
 import {copy, isEmptyObject, setDisabled, toTree} from "@/utils/Tool.js";
 import {useRoute} from "vue-router";
 import {Editor, Toolbar} from '@wangeditor/editor-for-vue'
+import { getContentDetailApi } from "@/apis/content.js";
 
 const loading = ref(false);
 const route = useRoute();
@@ -36,62 +37,45 @@ const getDocList = async () => {
     data.value = toTree(res.data, 0);
     loading.value = false;
 };
+// 获取内容详情
+const getContentDetail = async (id) => {
+    const res = await getContentDetailApi(id);
+    if (res.code === 200) {
+        editorContent.value = res.data.content;
+    }
+};
 
 // 富文本编辑器
 // 编辑器实例，必须用 shallowRef
 const editorRef = shallowRef()
 // 内容 HTML
-const valueHtml = ref('<p>hello</p>')
+const editorContent = ref('')
 const mode = 'default'
 const toolbarConfig = {}
 const editorConfig = { placeholder: '请输入内容...' }
-
 const handleCreated = (editor) => {
     editorRef.value = editor // 记录 editor 实例，重要！
 }
 
-// 弹出框
-const open = ref(false);
+// 表单
 const confirmLoading = ref(false);
 const form = ref({})
 const treeData = ref([]);
-const edit = (record) => {
-    open.value = true;
+// 编辑
+const edit = async (record) => {
+    editorContent.value = '';
     form.value = copy(record);
     
+    // 获取内容详情
+    await getContentDetail(record.id);
     // 设置节点及其子节点不可选
     treeData.value = copy(data.value);
     setDisabled(treeData.value, record.id);
     
     treeData.value.unshift({id: 0, docName: '无'});
 };
-// 确认
-const handleOk = async () => {
-    confirmLoading.value = true;
-    form.value.bookId = route.params.id;
-    const res = await saveDocApi(form.value);
-    if (res.code === 200) {
-        notification.success({
-            message: '成功',
-            description: '修改成功'
-        });
-        confirmLoading.value = false;
-        open.value = false;
-        await getDocList()
-    } else {
-        notification.error({
-            message: '失败',
-            description: '修改失败'
-        });
-        confirmLoading.value = false;
-        open.value = false;
-    }
-};
-
-
 // 新增
 const add = () => {
-    open.value = true;
     form.value = {};
     
     // 复制数据
@@ -99,6 +83,29 @@ const add = () => {
     
     treeData.value.unshift({id: 0, docName: '无'});
 };
+// 确认
+const handleOk = async () => {
+    confirmLoading.value = true;
+    form.value.bookId = route.params.id;
+    form.value.content = editorContent.value;
+    const res = await saveDocApi(form.value);
+    if (res.code === 200) {
+        notification.success({
+            message: '成功',
+            description: '修改成功'
+        });
+        confirmLoading.value = false;
+        await getDocList()
+    } else {
+        notification.error({
+            message: '失败',
+            description: '修改失败'
+        });
+        confirmLoading.value = false;
+    }
+};
+
+
 
 
 // 获取删除的id
@@ -255,13 +262,13 @@ onMounted(() => {
                             :defaultConfig="toolbarConfig"
                             :mode="mode"
                         />
-                        <Editor
-                            style="height: 500px; overflow-y: hidden;"
-                            v-model="valueHtml"
-                            :defaultConfig="editorConfig"
-                            :mode="mode"
-                            @onCreated="handleCreated"
-                        />
+                            <Editor
+                                style="height: 500px; overflow-y: hidden;"
+                                v-model="editorContent"
+                                :defaultConfig="editorConfig"
+                                :mode="mode"
+                                @onCreated="handleCreated"
+                            />
                     </div>
                 </a-form-item>
             </a-form>
