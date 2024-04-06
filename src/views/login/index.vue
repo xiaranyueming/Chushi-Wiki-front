@@ -33,7 +33,7 @@ const login = async () => {
             notification.success({
                 message: '登录成功',
             })
-            localStorage.setItem('user', res.data)
+            localStorage.setItem('user', JSON.stringify(res.data))
             setTimeout(() => {
                 router.push('/')
             }, 500)
