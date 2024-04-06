@@ -1,29 +1,38 @@
 <script setup>
 import {RouterView} from 'vue-router'
+
 </script>
 
 <template>
     <a-layout>
         <a-layout-header class="header">
-            <div class="logo" />
-            <a-menu
-                theme="dark"
-                mode="horizontal"
-                :style="{ lineHeight: '64px' }"
-            >
-                <a-menu-item key="index">
-                    <RouterLink to="/">首页</RouterLink>
-                </a-menu-item>
-                <a-menu-item key="books">
-                    <RouterLink to="/admin/book">书籍管理</RouterLink>
-                </a-menu-item>
-                <a-menu-item key="category">
-                    <RouterLink to="/admin/category">分类管理</RouterLink>
-                </a-menu-item>
-                <a-menu-item key="about">
-                    <RouterLink to="/about">关于我们</RouterLink>
-                </a-menu-item>
-            </a-menu>
+            <div>
+                <div class="logo" />
+                <a-menu
+                    theme="dark"
+                    mode="horizontal"
+                    :style="{ lineHeight: '64px' }"
+                >
+                    <a-menu-item key="index">
+                        <RouterLink to="/">首页</RouterLink>
+                    </a-menu-item>
+                    <a-menu-item key="books">
+                        <RouterLink to="/admin/book">书籍管理</RouterLink>
+                    </a-menu-item>
+                    <a-menu-item key="category">
+                        <RouterLink to="/admin/category">分类管理</RouterLink>
+                    </a-menu-item>
+                    <a-menu-item key="about">
+                        <RouterLink to="/about">关于我们</RouterLink>
+                    </a-menu-item>
+                </a-menu>
+            </div>
+            <div>
+                <RouterLink to="/login">
+                    <a-button class="login-btn" type="primary" ghost @click="login">登录</a-button>
+                </RouterLink>
+            </div>
+            
         </a-layout-header>
         <a-layout-content>
                <RouterView />
@@ -35,6 +44,11 @@ import {RouterView} from 'vue-router'
 </template>
 
 <style scoped>
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-content: center;
+}
 #components-layout-demo-top-side .logo {
     float: left;
     width: 120px;

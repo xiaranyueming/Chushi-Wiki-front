@@ -6,6 +6,7 @@ import CategoryAdmin from "@/views/admin/category-admin.vue";
 import Book from "@/views/book/index.vue";
 import DocAdmin from "@/views/admin/doc-admin.vue";
 import Doc from "@/views/doc/index.vue";
+import Login from "@/views/login/index.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,6 +27,11 @@ const router = createRouter({
                     component: Book
                 }
             ]
+      },
+      {
+            path: '/login',
+            name: 'Login',
+            component: Login
       },
       {
             path: '/admin/book',
