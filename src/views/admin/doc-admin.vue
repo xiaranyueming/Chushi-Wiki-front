@@ -1,45 +1,29 @@
 <script setup>
 import {onMounted, ref} from 'vue';
-import {deleteBooksApi, getBooksListApi, saveBooksApi, searchBooksApi} from "@/apis/books.js";
+import {deleteDocApi, getDocListApi, saveDocApi, searchDocApi} from "@/apis/doc.js";
 import dayjs from "dayjs";
 import {notification} from 'ant-design-vue';
-import {copy, toTree} from "@/utils/Tool.js";
-import {getCategoryListApi} from "@/apis/category.js";
+import {copy, isEmptyObject, setDisabled, toTree} from "@/utils/Tool.js";
+import {useRoute} from "vue-router";
 
 const loading = ref(false);
+const route = useRoute();
 
 // 表格列
 const columns = [
     {
-        title: '封面',
-        dataIndex: 'cover',
-        key: 'cover',
+        title: '文档名称',
+        dataIndex: 'docName',
         align: 'center',
     },
     {
-        title: '书名',
-        dataIndex: 'bookName',
+        title: '父文档',
+        dataIndex: 'parentId',
         align: 'center',
     },
     {
-        title: '分类',
-        dataIndex: 'category',
-        align: 'center',
-        key: 'category',
-    },
-    {
-        title: '文档数',
-        dataIndex: 'docCount',
-        align: 'center',
-    },
-    {
-        title: '浏览量',
-        dataIndex: 'viewCount',
-        align: 'center',
-    },
-    {
-        title: '点赞数',
-        dataIndex: 'voteCount',
+        title: '排序',
+        dataIndex: 'sort',
         align: 'center',
     },
     {
@@ -57,33 +41,15 @@ const columns = [
 ];
 // 获取数据
 const data = ref([]);
-const getBooksList = async () => {
+const getDocList = async () => {
     loading.value = true;
-    const res = await getBooksListApi();
+    const res = await getDocListApi();
     if (res.code !== 200) {
         loading.value = false;
         return;
     }
-    data.value = res.data;
+    data.value = toTree(res.data, 0);
     loading.value = false;
-};
-const getCategoryName = (id) => {
-    let name = '';
-    categorys.value.forEach(item => {
-        if (item.id === id) {
-            name = item.categoryName;
-        }
-    });
-    return name;
-};
-
-
-// 分页
-const pagination = {
-    onChange: (page) => {
-        console.log(page);
-    },
-    pageSize: 6,
 };
 
 
@@ -91,28 +57,22 @@ const pagination = {
 const open = ref(false);
 const confirmLoading = ref(false);
 const form = ref({})
-const categoryIds = ref([]);
-// 获取分类数据
-let categorys = ref([]);
-const categoryList = ref([]);
-const getCategoryList = async () => {
-    const res = await getCategoryListApi();
-    if (res.code === 200) {
-        categorys.value = res.data;
-        categoryList.value = toTree(res.data, 0);
-    }
-};
+const treeData = ref([]);
 const edit = (record) => {
     open.value = true;
     form.value = copy(record);
-    categoryIds.value = [form.value.category1Id, form.value.category2Id];
+    
+    // 设置节点及其子节点不可选
+    treeData.value = copy(data.value);
+    setDisabled(treeData.value, record.id);
+    
+    treeData.value.unshift({id: 0, docName: '无'});
 };
 // 确认
 const handleOk = async () => {
     confirmLoading.value = true;
-    form.value.category1Id = categoryIds.value[0];
-    form.value.category2Id = categoryIds.value[1];
-    const res = await saveBooksApi(form.value);
+    form.value.bookId = route.params.id;
+    const res = await saveDocApi(form.value);
     if (res.code === 200) {
         notification.success({
             message: '成功',
@@ -120,7 +80,7 @@ const handleOk = async () => {
         });
         confirmLoading.value = false;
         open.value = false;
-        await getBooksList()
+        await getDocList()
     } else {
         notification.error({
             message: '失败',
@@ -136,18 +96,48 @@ const handleOk = async () => {
 const add = () => {
     open.value = true;
     form.value = {};
+    
+    // 复制数据
+    treeData.value = copy(data.value);
+    
+    treeData.value.unshift({id: 0, docName: '无'});
 };
 
 
+// 获取删除的id
+const ids = ref([]);
+const getDeleteIds = (list, id) => {
+    for (let i = 0; i < list.length; i++) {
+        const node = list[i];
+        if (node.id === id) {
+            // 设置为disabled
+            ids.value.push(node.id);
+            
+            const children = node.children;
+            if (!isEmptyObject(children)) {
+                // 递归设置子孙节点为disabled
+                for (let j = 0; j < children.length; j++) {
+                    getDeleteIds(children, children[j].id);
+                }
+            }
+        } else {
+            const children = node.children;
+            if (!isEmptyObject(children)) {
+                getDeleteIds(children, id);
+            }
+        }
+    }
+};
 // 删除
 const del = async (id) => {
-    const res = await deleteBooksApi(id);
+    getDeleteIds(data.value, id)
+    const res = await deleteDocApi(ids.value);
     if (res.code === 200) {
         notification.success({
             message: '成功',
             description: '删除成功'
         });
-        await getBooksList()
+        await getDocList()
     } else {
         notification.error({
             message: '失败',
@@ -160,7 +150,7 @@ const del = async (id) => {
 // 搜索
 const keyWord = ref('');
 const search = async () => {
-    const res = await searchBooksApi(keyWord.value);
+    const res = await searchDocApi(keyWord.value);
     if (res.code === 200) {
         data.value = res.data;
     } else {
@@ -173,15 +163,14 @@ const search = async () => {
 
 
 onMounted(() => {
-    getBooksList();
-    getCategoryList()
+    getDocList();
 });
 </script>
 
 <template>
     <div class="hd">
         <div class="search">
-            <a-input v-model:value="keyWord" allow-clear placeholder="请输入书名" style="width: 200px" />
+            <a-input v-model:value="keyWord" allow-clear placeholder="请输入文档名" style="width: 200px" />
             <a-button class="search-btn" type="primary" ghost @click="search">查询</a-button>
         </div>
         <a-button class="btn" type="primary" ghost @click="add">新增</a-button>
@@ -189,25 +178,14 @@ onMounted(() => {
     
     
     <a-table :columns="columns" :data-source="data"
-             :loading="loading" :pagination="pagination"
+             :loading="loading" :pagination="false"
     >
         <template #bodyCell="{ column, record }">
-            <template v-if="column.key === 'cover'">
-                <img class="img" :src="record.cover"  alt="avatar" />
-            </template>
-            <template v-else-if="column.key === 'category'">
-                {{ getCategoryName(record.category1Id) }}/{{ getCategoryName(record.category2Id) }}
-            </template>
-            <template v-else-if="column.key === 'createTime'">
+            <template v-if="column.key === 'createTime'">
                 {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
             </template>
             <template v-else-if="column.key === 'action'">
                 <a-space size="middle">
-                    <RouterLink :to="`/admin/doc/${record.id}`">
-                        <a-button type="primary" ghost>
-                            查看
-                        </a-button>
-                    </RouterLink>
                     <a-button type="primary" ghost @click="edit(record)">编辑</a-button>
                     <a-popconfirm
                         title="删除后不可恢复哦，确认删除吗?"
@@ -224,7 +202,7 @@ onMounted(() => {
         </template>
     </a-table>
     
-    <a-modal v-model:open="open" title="编辑书单" centered
+    <a-modal v-model:open="open" title="编辑文档" centered
              :body-style="{'margin-left': '-90px'}"
              :confirm-loading="confirmLoading"
              cancel-text="取消" ok-text="确定"
@@ -238,36 +216,38 @@ onMounted(() => {
             autocomplete="off"
         >
             <a-form-item
-                label="书名"
-                name="bookName"
-                :rules="[{ required: true, message: '请输入书名!' }]"
+                label="文档名"
+                name="docName"
+                :rules="[{ required: true, message: '请输入文档名!' }]"
             >
-                <a-input v-model:value="form.bookName" />
+                <a-input v-model:value="form.docName" />
             </a-form-item>
             
             <a-form-item
-                label="封面"
-                name="cover"
-                :rules="[{ required: true, message: '请输入封面地址!' }]"
+                label="父文档"
+                name="parentId"
+                :rules="[{ required: true, message: '请选择父文档!' }]"
             >
-                <a-input v-model:value="form.cover" />
+                <a-tree-select
+                    v-model:value="form.parentId"
+                    show-search
+                    style="width: 100%"
+                    :dropdown-style="{ maxHeight: '400px', overflow: 'auto' }"
+                    placeholder="请选择父文档"
+                    allow-clear
+                    tree-default-expand-all
+                    :tree-data="treeData"
+                    tree-node-filter-prop="label"
+                    :field-names="{ label: 'docName', value: 'id', key: 'id' }"
+                >
+                </a-tree-select>
             </a-form-item>
             
             <a-form-item
-                label="分类"
+                label="排序"
+                name="sort"
             >
-                <a-cascader v-model:value="categoryIds"
-                            :options="categoryList"
-                            :field-names="{ label: 'categoryName', value: 'id', children: 'children' }"
-                            placeholder="请选择分类"
-                />
-            </a-form-item>
-            
-            <a-form-item
-                label="描述"
-                name="description"
-            >
-                <a-textarea :auto-size="{ minRows: 2, maxRows: 5 }" v-model:value="form.description" />
+                <a-input v-model:value="form.sort" />
             </a-form-item>
         </a-form>
     </a-modal>
