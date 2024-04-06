@@ -5,6 +5,7 @@ import BookAdmin from "@/views/admin/book-admin.vue";
 import CategoryAdmin from "@/views/admin/category-admin.vue";
 import Book from "@/views/book/index.vue";
 import DocAdmin from "@/views/admin/doc-admin.vue";
+import Doc from "@/views/doc/index.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -40,6 +41,11 @@ const router = createRouter({
             path: '/admin/doc/:id',
             name: 'DocAdmin',
             component: DocAdmin
+      },
+      {
+            path: '/doc',
+            name: 'Doc',
+            component: Doc
       }
   ]
 })

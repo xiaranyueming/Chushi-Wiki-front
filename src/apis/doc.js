@@ -39,3 +39,14 @@ export const searchDocApi = (keyWord) => {
     });
 }
 
+
+// 通过书籍id获取文档列表
+export const getDocListByBookIdApi = (bookId) => {
+    return Request({
+        url: `/doc/${bookId}`,
+        method: "get",
+    });
+}
+
+
+

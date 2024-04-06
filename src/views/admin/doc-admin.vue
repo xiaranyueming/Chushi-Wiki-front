@@ -1,6 +1,6 @@
 <script setup>
 import {onMounted, ref, shallowRef} from 'vue';
-import {deleteDocApi, getDocListApi, saveDocApi, searchDocApi} from "@/apis/doc.js";
+import {deleteDocApi, getDocListByBookIdApi, saveDocApi, searchDocApi} from "@/apis/doc.js";
 import {notification} from 'ant-design-vue';
 import {copy, isEmptyObject, setDisabled, toTree} from "@/utils/Tool.js";
 import {useRoute} from "vue-router";
@@ -29,13 +29,17 @@ const columns = [
 const data = ref([]);
 const getDocList = async () => {
     loading.value = true;
-    const res = await getDocListApi();
+    const res = await getDocListByBookIdApi(route.params.id);
     if (res.code !== 200) {
         loading.value = false;
         return;
     }
     data.value = toTree(res.data, 0);
     loading.value = false;
+    // 构造树形数据
+    treeData.value = copy(data.value);
+    
+    treeData.value.unshift({id: 0, docName: '无'});
 };
 // 获取内容详情
 const getContentDetail = async (id) => {
@@ -107,6 +111,14 @@ const handleOk = async () => {
 
 
 
+// 预览
+const open = ref(false)
+const preview = () => {
+    open.value = true;
+}
+
+
+
 
 // 获取删除的id
 const ids = ref([]);
@@ -166,8 +178,8 @@ const search = async () => {
 }
 
 
-onMounted(() => {
-    getDocList();
+onMounted(async () => {
+    await getDocList();
 });
 </script>
 
@@ -254,6 +266,12 @@ onMounted(() => {
                     <a-input v-model:value="form.sort" placeholder="排序" />
                 </a-form-item>
                 
+                <a-form-item name="preview">
+                    <a-button ghost type="primary" @click="preview">
+                        预览
+                    </a-button>
+                </a-form-item>
+                
                 <a-form-item>
                     <div style="border: 1px solid #ccc">
                         <Toolbar
@@ -274,6 +292,16 @@ onMounted(() => {
             </a-form>
         </a-col>
     </a-row>
+    
+    <a-drawer width="900"
+        v-model:open="open"
+        class="custom-class"
+        root-class-name="root-class-name"
+        title="预览"
+        placement="right"
+    >
+        <div v-html="editorContent"></div>
+    </a-drawer>
 </template>
 
 <style scoped>
