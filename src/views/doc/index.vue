@@ -1,15 +1,16 @@
 <script setup>
-import { getDocListByBookIdApi } from "@/apis/doc.js";
+import {getDocListByBookIdApi, voteDocApi} from "@/apis/doc.js";
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { toTree, isEmptyObject } from "@/utils/Tool.js";
 import { getContentDetailApi } from "@/apis/content.js";
+import {LikeOutlined} from "@ant-design/icons-vue";
+import {message} from "ant-design-vue";
 
 const route = useRoute();
 const data = ref([]);
 
 // 获取文档列表
-const defaultSelected = ref([]);
 const getDocListByBookId = async () => {
     const res = await getDocListByBookIdApi(route.query.bookId);
     if (res.code === 200) {
@@ -21,15 +22,28 @@ const getDocListByBookId = async () => {
 };
 
 // 获取文档内容
+const docId = ref(null)
+const voteCount = ref(0)
 const html = ref('')
 const getContent = async (key) => {
     html.value = ''
     const res = await getContentDetailApi(key[0])
     if (res.code === 200) {
         html.value = res.data.content
+        docId.value = key[0]
+        voteCount.value = res.data.voteCount
     }
 }
 
+
+// 点赞
+const vote = async () => {
+    const res = await voteDocApi(docId.value)
+    if (res.code === 200) {
+        voteCount.value++
+        message.success('点赞成功')
+    }
+}
 
 
 onMounted(() => {
@@ -51,6 +65,14 @@ onMounted(() => {
         </a-col>
         <a-col :span="18">
             <div class="editor-content-view" v-html="html"></div>
+            <div class="vote" v-if="html" @click="vote">
+                <a-button class="vote-btn" type="primary">
+                    <template #icon>
+                        <LikeOutlined />
+                    </template>
+                    点赞 {{ voteCount }}
+                </a-button>
+            </div>
         </a-col>
     </a-row>
 </template>
@@ -106,5 +128,12 @@ onMounted(() => {
 
 .editor-content-view input[type="checkbox"] {
     margin-right: 5px;
+}
+.vote {
+    margin: 75px 0 0;
+    text-align: center;
+}
+.vote-btn {
+    border-radius: 20px;
 }
 </style>

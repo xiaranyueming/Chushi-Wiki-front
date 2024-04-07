@@ -49,4 +49,12 @@ export const getDocListByBookIdApi = (bookId) => {
 }
 
 
+// 点赞
+export const voteDocApi = (docId) => {
+    return Request({
+        url: `/doc/vote/${docId}`,
+        method: "get",
+    });
+}
+
 
