@@ -51,7 +51,9 @@ onMounted(() => {
                 </template>
                 <a-list-item-meta :description="item.description">
                     <template #title>
-                        <span>{{ item.bookName }}</span>
+                        <RouterLink :to="'/doc?bookId=' + item.id">
+                            {{ item.bookName }}
+                        </RouterLink>
                     </template>
                     <template #avatar><a-avatar :src="item.cover" /></template>
                 </a-list-item-meta>

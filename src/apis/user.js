@@ -21,3 +21,13 @@ export const registerApi = (data) => {
     });
 }
 
+
+
+// 重置密码
+export const resetPasswordApi = (data) => {
+    return Request({
+        url: "/user/reset",
+        method: "post",
+        data
+    });
+}
