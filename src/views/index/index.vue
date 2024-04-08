@@ -1,5 +1,5 @@
 <script setup>
-import {LikeOutlined, MessageOutlined, StarOutlined} from '@ant-design/icons-vue';
+import {BarsOutlined, EyeOutlined, LikeOutlined, MessageOutlined, StarOutlined} from '@ant-design/icons-vue';
 import {onMounted, ref} from "vue";
 import {getBooksListApi} from "@/apis/books.js";
 
@@ -17,11 +17,6 @@ const pagination = {
     },
     pageSize: 6,
 };
-const actions = [
-    { icon: StarOutlined, text: '156' },
-    { icon: LikeOutlined, text: '156' },
-    { icon: MessageOutlined, text: '2' },
-];
 
 
 onMounted(() => {
@@ -36,9 +31,17 @@ onMounted(() => {
         <template #renderItem="{ item }">
             <a-list-item key="item.title">
                 <template #actions>
-                  <span v-for="{ icon, text } in actions" :key="icon">
-                    <component :is="icon" style="margin-right: 8px" />
-                    {{ text }}
+                  <span>
+                    <component :is="BarsOutlined" style="margin-right: 8px" />
+                    {{ item.docCount }}
+                  </span>
+                  <span>
+                    <component :is="EyeOutlined" style="margin-right: 8px" />
+                    {{ item.viewCount }}
+                  </span>
+                  <span>
+                    <component :is="LikeOutlined" style="margin-right: 8px" />
+                    {{ item.voteCount }}
                   </span>
                 </template>
                 <a-list-item-meta :description="item.description">
